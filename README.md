@@ -1,42 +1,52 @@
-# sv
+# ap-blog
 
-Everything you need to build a Svelte project, powered by [`sv`](https://github.com/sveltejs/cli).
+个人主页 + 博客站点：SvelteKit 2 + Svelte 5（runes）+ TypeScript。博文是文件系统上的 Markdown，运行时扫描、无数据库。项目由 `../demo` 原型规范化迁移而来（详见 `AGENTS.md`）。
 
-## Creating a project
-
-If you're seeing this, you've probably already done this step. Congrats!
+## 开发
 
 ```sh
-# create a new project
-npx sv create my-app
+bun install
+bun run dev            # 开发服务器（监听 0.0.0.0）
 ```
 
-To recreate this project with the same configuration:
+## 构建与预览
 
 ```sh
-# recreate this project
-bun x sv@0.16.3 create --template minimal --types ts --add prettier eslint paraglide="languageTags:zh-cn, en+demo:no" playwright --install bun ap-blog
+bun run build          # 生产构建（adapter-node，输出到 build/）
+bun run preview        # 预览生产构建（端口 4173）
 ```
 
-## Developing
+## 文章目录与同步
 
-Once you've created a project and installed dependencies with `npm install` (or `pnpm install` or `yarn`), start a development server:
+博文是 `content/posts/` 下的 Markdown 文件，**服务器在每次请求时扫描该目录**——发文/改文/删文都不需要重新构建或重启进程。
+
+- 文件名即 URL slug，只允许 `A-Za-z0-9_-`（如 `hello-world.md` → `/blog/hello-world`）
+- frontmatter 支持 `title`、`date`、`excerpt`、`tags: [a, b]`，以及 `draft: true`（草稿不在前台展示）
+- 目录路径可用环境变量 `CONTENT_DIR` 覆盖，缺省为工作目录下的 `content/posts`
+
+发布流程（本地目录是唯一事实源，单向推送）：
 
 ```sh
-npm run dev
-
-# or start the server and open the app in a new browser tab
-npm run dev -- --open
+rsync -av --delete content/posts/ server:/srv/blog/posts/
 ```
 
-## Building
+rsync 先写临时文件再重命名，请求不会读到写了一半的文章；`--delete` 让本地删除的文章同步下线。
 
-To create a production version of your app:
+## 部署
+
+项目使用 adapter-node，构建产物是一个独立 Node 服务：
 
 ```sh
-npm run build
+bun run build
+CONTENT_DIR=/srv/blog/posts PORT=3000 node build
 ```
 
-You can preview the production build with `npm run preview`.
+注意 `CONTENT_DIR` 要指向构建产物之外的持久目录（Docker 部署时挂载卷），且建议使用**绝对路径**（缺省值 `content/posts` 是相对进程工作目录解析的），重新部署应用不影响文章内容。
 
-> To deploy your app, you may need to install an [adapter](https://svelte.dev/docs/kit/adapters) for your target environment.
+## 测试
+
+```sh
+bun run check          # svelte-check 类型检查
+bun run lint           # prettier --check + eslint
+bun run test           # Playwright e2e（自动 build + preview，仅用 chromium）
+```
