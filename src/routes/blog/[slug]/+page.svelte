@@ -41,19 +41,9 @@
 		color: var(--accent);
 	}
 
+	/* 布局与配色走全局 .meta / .tag（app.css），这里只留字号差异 */
 	.meta {
-		display: flex;
-		align-items: center;
-		gap: 8px;
 		font-size: 13px;
-		color: var(--muted);
-	}
-
-	.tag {
-		padding: 1px 8px;
-		border-radius: 999px;
-		background: color-mix(in srgb, var(--accent) 12%, transparent);
-		color: var(--accent);
 	}
 
 	h2 {

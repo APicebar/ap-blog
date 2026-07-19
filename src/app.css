@@ -78,3 +78,50 @@ button {
 	padding: 0;
 	cursor: pointer;
 }
+
+/* 板块页头：emoji 标题 + 一行简介（blog / projects 列表页共用） */
+.page-header {
+	margin-bottom: 28px;
+}
+
+.page-header h2 {
+	margin: 0 0 6px;
+	font-size: 28px;
+}
+
+.page-header p {
+	margin: 0;
+	color: var(--muted);
+}
+
+/* 层级最高的一级内容卡：比 panel 更亮的实色表面（背景已被 panel 模糊过，无需再 blur）。
+   blog 列表卡与 projects 卡共用；padding 等布局差异留在各自 scoped 样式中 */
+.card-surface {
+	border-radius: 18px;
+	border: 1px solid var(--border);
+	background: color-mix(in srgb, var(--panel-2) 78%, transparent);
+	transition:
+		border-color 0.15s ease,
+		transform 0.15s ease;
+}
+
+.card-surface:hover {
+	border-color: color-mix(in srgb, var(--accent) 45%, transparent);
+	transform: translateY(-2px);
+}
+
+/* 日期 + 标签的元信息行（blog 列表与文章页共用；font-size 两处不同，留在各自 scoped 样式中） */
+.meta {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	color: var(--muted);
+}
+
+/* 标签小胶囊 */
+.tag {
+	padding: 1px 8px;
+	border-radius: 999px;
+	background: color-mix(in srgb, var(--accent) 12%, transparent);
+	color: var(--accent);
+}

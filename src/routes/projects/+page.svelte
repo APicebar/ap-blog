@@ -22,14 +22,14 @@
 	<meta property="og:type" content="website" />
 </svelte:head>
 
-<header>
+<header class="page-header">
 	<h2>🧪 项目</h2>
 	<p>一些做着玩的东西。</p>
 </header>
 
 <div class="grid">
 	{#each visible as project (project.name)}
-		<article>
+		<article class="card-surface">
 			<div class="icon">{project.icon}</div>
 			<h3>{project.name}</h3>
 			<p>{project.desc}</p>
@@ -45,40 +45,15 @@
 <InfiniteSentinel {hasMore} loading={false} onload={loadMore} />
 
 <style>
-	header {
-		margin-bottom: 28px;
-	}
-
-	header h2 {
-		margin: 0 0 6px;
-		font-size: 28px;
-	}
-
-	header p {
-		margin: 0;
-		color: var(--muted);
-	}
-
 	.grid {
 		display: grid;
 		grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
 		gap: 14px;
 	}
 
+	/* 卡片表面（border/背景/hover 等）走全局 .card-surface（app.css），这里只留布局差异 */
 	article {
 		padding: 20px;
-		border-radius: 18px;
-		border: 1px solid var(--border);
-		/* 层级最高的一级内容卡：比 panel 更亮的实色表面（背景已被 panel 模糊过，无需再 blur） */
-		background: color-mix(in srgb, var(--panel-2) 78%, transparent);
-		transition:
-			border-color 0.15s ease,
-			transform 0.15s ease;
-	}
-
-	article:hover {
-		border-color: color-mix(in srgb, var(--accent) 45%, transparent);
-		transform: translateY(-2px);
 	}
 
 	.icon {

@@ -40,7 +40,7 @@
 	<meta property="og:type" content="website" />
 </svelte:head>
 
-<header>
+<header class="page-header">
 	<h2>📝 博客</h2>
 	<p>随便写写的笔记，不定期更新。</p>
 </header>
@@ -48,7 +48,7 @@
 <ul>
 	{#each posts as post (post.slug)}
 		<li>
-			<a href={resolve('/blog/[slug]', { slug: post.slug })}>
+			<a class="card-surface" href={resolve('/blog/[slug]', { slug: post.slug })}>
 				<div class="meta">
 					<time>{post.date}</time>
 					{#each post.tags as tag (tag)}
@@ -72,20 +72,6 @@
 {/if}
 
 <style>
-	header {
-		margin-bottom: 28px;
-	}
-
-	header h2 {
-		margin: 0 0 6px;
-		font-size: 28px;
-	}
-
-	header p {
-		margin: 0;
-		color: var(--muted);
-	}
-
 	ul {
 		list-style: none;
 		margin: 0;
@@ -95,37 +81,16 @@
 		gap: 14px;
 	}
 
+	/* 卡片表面（border/背景/hover 等）走全局 .card-surface（app.css），这里只留布局差异 */
 	li a {
 		display: block;
 		padding: 18px 20px;
-		border-radius: 18px;
-		border: 1px solid var(--border);
-		/* 层级最高的一级内容卡：比 panel 更亮的实色表面（背景已被 panel 模糊过，无需再 blur） */
-		background: color-mix(in srgb, var(--panel-2) 78%, transparent);
 		text-decoration: none;
-		transition:
-			border-color 0.15s ease,
-			transform 0.15s ease;
 	}
 
-	li a:hover {
-		border-color: color-mix(in srgb, var(--accent) 45%, transparent);
-		transform: translateY(-2px);
-	}
-
+	/* 布局与配色走全局 .meta / .tag（app.css），这里只留字号差异 */
 	.meta {
-		display: flex;
-		align-items: center;
-		gap: 8px;
 		font-size: 12px;
-		color: var(--muted);
-	}
-
-	.tag {
-		padding: 1px 8px;
-		border-radius: 999px;
-		background: color-mix(in srgb, var(--accent) 12%, transparent);
-		color: var(--accent);
 	}
 
 	h3 {
