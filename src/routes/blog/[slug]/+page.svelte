@@ -8,6 +8,10 @@
 
 <svelte:head>
 	<title>{pageTitle(data.post.title)}</title>
+	<meta name="description" content={data.post.excerpt} />
+	<meta property="og:title" content={pageTitle(data.post.title)} />
+	<meta property="og:description" content={data.post.excerpt} />
+	<meta property="og:type" content="article" />
 </svelte:head>
 
 <a class="back" href={resolve('/blog')}>← 返回博客</a>

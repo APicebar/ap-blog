@@ -2,7 +2,7 @@
 	import { resolve } from '$app/paths';
 	import InfiniteSentinel from '$lib/components/InfiniteSentinel.svelte';
 	import { POSTS_PAGE_SIZE, type PostMeta, type PostsPage } from '$lib/posts';
-	import { pageTitle } from '$lib/site';
+	import { SITE_DESCRIPTION, pageTitle } from '$lib/site';
 	import type { PageProps } from './$types';
 
 	let { data }: PageProps = $props();
@@ -34,6 +34,10 @@
 
 <svelte:head>
 	<title>{pageTitle('Blog')}</title>
+	<meta name="description" content={SITE_DESCRIPTION} />
+	<meta property="og:title" content={pageTitle('Blog')} />
+	<meta property="og:description" content={SITE_DESCRIPTION} />
+	<meta property="og:type" content="website" />
 </svelte:head>
 
 <header>
