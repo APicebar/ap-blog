@@ -130,7 +130,7 @@
 		overflow-y: auto;
 		/* 固定尺寸：高度不再随内容增长，超出部分在 panel 内部滚动（无限滚动的前提） */
 		width: min(920px, calc(100% - 32px));
-		height: min(860px, calc(100dvh - 56px));
+		height: min(1200px, calc(100dvh - 56px));
 		margin: auto;
 		padding: clamp(24px, 5vw, 56px) clamp(20px, 5vw, 48px);
 		border-radius: 24px;

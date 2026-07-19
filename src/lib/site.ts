@@ -2,7 +2,7 @@
 export const SITE_NAME = '- ovo? -';
 
 /** 站点描述：用于 meta description 与 Open Graph */
-export const SITE_DESCRIPTION = '写代码、写字，偶尔画点画的个人博客。';
+export const SITE_DESCRIPTION = '写代码是工作，音了游戏是生活';
 
 /** 拼装页面标题：有栏目/文章名时作为前缀，否则只用站点名 */
 export function pageTitle(name?: string): string {
