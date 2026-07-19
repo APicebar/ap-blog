@@ -11,14 +11,16 @@
 
 	let { children } = $props();
 
-	// 板块由 URL 推导：/ 是主页（居中卡片），/blog、/projects 等是导航栏形态。
+	// 板块由 URL 推导：仅 / 是主页（居中卡片），其余路径（含 404 错误页）一律导航栏形态。
 	// 直接输入 URL 访问时也是同一份推导，所以天然支持直达。
 	const section = $derived<SectionId>(
-		page.url.pathname.startsWith('/blog')
-			? 'blog'
-			: page.url.pathname.startsWith('/projects')
-				? 'projects'
-				: 'home'
+		page.url.pathname === '/'
+			? 'home'
+			: page.url.pathname.startsWith('/blog')
+				? 'blog'
+				: page.url.pathname.startsWith('/projects')
+					? 'projects'
+					: 'other'
 	);
 
 	// 两个锚点常驻 layout（路由切换时 layout 不卸载），卡片因此始终是同一组件实例，

@@ -1,4 +1,5 @@
-export type SectionId = 'home' | 'blog' | 'projects' | 'about';
+// 'other' 用于 /、/blog、/projects 之外的路径（如 404 错误页）：卡片呈导航栏形态，但不高亮任何导航项
+export type SectionId = 'home' | 'blog' | 'projects' | 'about' | 'other';
 
 interface SectionLink {
 	kind: 'section';

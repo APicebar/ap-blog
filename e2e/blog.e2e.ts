@@ -21,3 +21,11 @@ test('不存在或非法的 slug 返回 404', async ({ page }) => {
 	const traversal = await page.goto('/blog/..%2F..%2Fpackage');
 	expect(traversal?.status()).toBe(404);
 });
+
+test('不存在的路径下名片卡为导航栏形态，不与错误页重叠', async ({ page }) => {
+	const response = await page.goto('/nonexist');
+	expect(response?.status()).toBe(404);
+	// 导航栏形态：compact 卡片可见，居中 hero 形态不出现
+	await expect(page.locator('.card.compact')).toBeVisible();
+	await expect(page.locator('.card .hero')).toHaveCount(0);
+});
