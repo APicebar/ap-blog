@@ -11,21 +11,9 @@ export const PROJECTS_CHUNK_SIZE = 6;
 
 export const projects: Project[] = [
 	{
-		icon: '🛰️',
-		name: 'orbit-toys',
-		desc: '一堆关于轨道力学的交互小实验，Canvas 绘制。',
-		tech: ['Svelte', 'Canvas']
+		icon: '🤖',
+		name: 'luogubot',
+		desc: '给搞 OI 的玩的 bot，在 QQ 内查询多个算竞网站的数据。已弃坑。',
+		tech: ['Python']
 	},
-	{
-		icon: '📦',
-		name: 'md-garden',
-		desc: '把 Markdown 文件夹直接变成静态博客的构建脚本。',
-		tech: ['Node', 'Markdown']
-	},
-	{
-		icon: '🎛️',
-		name: 'knob-ui',
-		desc: '拟物风格的旋钮组件库，支持触摸拖动和滚轮。',
-		tech: ['Svelte', 'CSS']
-	}
 ];
