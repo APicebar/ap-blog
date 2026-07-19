@@ -13,7 +13,8 @@
 		"lint": "prettier --check . && eslint .",
 		"format": "prettier --write .",
 		"test:e2e": "playwright install chromium && playwright test",
-		"test": "npm run test:e2e"
+		"test": "npm run test:e2e",
+		"deploy": "rsync -av build/ apicebar@apice.bar:~/ap-blog/build && ssh -t apice.bar 'systemctl --user restart ap-blog' && echo done"
 	},
 	"devDependencies": {
 		"@eslint/js": "^10.0.1",
