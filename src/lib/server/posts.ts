@@ -1,12 +1,14 @@
 import { readdir, readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { env } from '$env/dynamic/private';
-import { marked } from 'marked';
-import { POSTS_PAGE_SIZE, type PostMeta, type PostsPage } from '$lib/posts';
+import { Marked } from 'marked';
+import { POSTS_PAGE_SIZE, type PostMeta, type PostsPage, type TocHeading } from '$lib/posts';
 
 export interface Post extends PostMeta {
 	/** marked 渲染后的正文 HTML */
 	html: string;
+	/** 文章目录（取自 h1~h3 标题，无标题时为空数组），供文章页右侧目录卡使用 */
+	headings: TocHeading[];
 }
 
 // 文章目录在构建产物之外，rsync 直接同步、无需重新构建。
@@ -87,6 +89,25 @@ export async function listPosts(offset = 0, limit = POSTS_PAGE_SIZE): Promise<Po
 	return { posts: posts.slice(offset, offset + limit), total: posts.length };
 }
 
+// 渲染正文并提取目录：每次请求新建 Marked 实例，目录收集在闭包内，无跨请求共享状态。
+// heading renderer 给 h1~h3 加锚点 id 并记入目录，更深的标题保持默认渲染
+function renderPost(body: string): { html: string; headings: TocHeading[] } {
+	const headings: TocHeading[] = [];
+	const md = new Marked({
+		renderer: {
+			heading({ tokens, depth }) {
+				const inner = this.parser.parseInline(tokens);
+				if (depth > 3) return `<h${depth}>${inner}</h${depth}>`;
+				const id = `toc-${headings.length}`;
+				// 目录显示纯文本：剥掉行内元素渲染出的标签（如 `code` 的 <code>）
+				headings.push({ id, text: inner.replace(/<[^>]+>/g, ''), depth });
+				return `<h${depth} id="${id}">${inner}</h${depth}>`;
+			}
+		}
+	});
+	return { html: md.parse(body, { async: false }), headings };
+}
+
 export async function getPost(slug: string): Promise<Post | null> {
 	if (!SLUG_PATTERN.test(slug)) return null;
 
@@ -94,7 +115,7 @@ export async function getPost(slug: string): Promise<Post | null> {
 		const raw = await readFile(path.join(contentDir(), `${slug}.md`), 'utf-8');
 		const { meta, body, draft } = parsePost(slug, raw);
 		if (draft) return null;
-		return { ...meta, html: marked.parse(body, { async: false }) };
+		return { ...meta, ...renderPost(body) };
 	} catch {
 		return null;
 	}

@@ -14,5 +14,12 @@ export interface PostsPage {
 	total: number;
 }
 
+/** 文章目录条目：服务端渲染 Markdown 时从标题提取，id 即正文标题元素上的锚点 */
+export interface TocHeading {
+	id: string;
+	text: string;
+	depth: number;
+}
+
 /** 博客列表每页文章数：首屏 SSR 与客户端无限滚动分页共用 */
 export const POSTS_PAGE_SIZE = 10;

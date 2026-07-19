@@ -64,6 +64,13 @@
 		font-size: 20px;
 	}
 
+	/* 目录锚点跳转的落点留白：h1~h3 才带 id（见 $lib/server/posts.ts） */
+	.content :global(h1),
+	.content :global(h2),
+	.content :global(h3) {
+		scroll-margin-top: 24px;
+	}
+
 	.content :global(a) {
 		color: var(--accent);
 	}

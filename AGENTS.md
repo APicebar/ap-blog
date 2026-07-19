@@ -34,9 +34,9 @@ src/lib/posts.ts        客户端/服务端共享的文章类型（PostMeta/Post
 src/lib/profile.ts      名片卡数据（头像、名字、链接）
 src/lib/projects.ts     项目展示数据与分批渲染常量
 src/lib/theme.ts        从背景图提取主题色的客户端逻辑
-src/lib/components/     ProfileCard.svelte（常驻名片卡/导航栏）、InfiniteSentinel.svelte（无限滚动哨兵）
+src/lib/components/     ProfileCard.svelte（常驻名片卡/导航栏）、InfiniteSentinel.svelte（无限滚动哨兵）、TocCard.svelte（文章目录卡）
 src/lib/assets/         背景图、favicon
-src/routes/             SvelteKit 路由：+layout.svelte、+page.svelte、blog/、projects/、api/posts/（分页 JSON）
+src/routes/             SvelteKit 路由：+layout.svelte（+layout.server.ts 下发文章目录）、+page.svelte、blog/、projects/、api/posts/（分页 JSON）
 e2e/blog.e2e.ts         Playwright 端到端测试
 static/                 静态文件（robots.txt）
 svelte.config.js        adapter-node + 强制 runes（SvelteKit/Svelte 配置的唯一位置）
@@ -64,6 +64,7 @@ bun run test           # 即 test:e2e：playwright install chromium && playwrigh
 - 目录可用环境变量 `CONTENT_DIR` 覆盖（`$env/dynamic/private`，运行时读取），缺省 `content/posts`（**相对进程 cwd**，部署时建议绝对路径）
 - 以 `.` 开头的文件被跳过（兼容 rsync 临时文件和编辑器 swp）；单篇解析失败只跳过并 `console.warn`，不影响列表
 - 文章 HTML 通过 `{@html}` 注入页面——这是刻意为之（站长自己的 Markdown、服务端渲染），已有 eslint-disable 注释说明
+- 文章目录（TOC）：`renderPost` 渲染正文时用自定义 heading renderer 给 h1~h3 加 `toc-N` 锚点 id 并提取纯文本目录（h4 及更深不进目录），随 `getPost` 的 `headings` 返回。目录卡 `TocCard.svelte` 渲染在 layout 的 `.toc-slot` 中、位于 **panel 外**贴 panel 右上角——panel 是滚动容器且有 `backdrop-filter`，页内元素无法溢出到 panel 外，故目录数据由根 `+layout.server.ts`（仅 `route.id === '/blog/[slug]'` 时）随 layout data 下发，文章本体经 `locals.post` 递给 page load 复用，不重复读盘解析。槽复刻 panel 的桌面尺寸与居中（幽灵对齐，同 hero/nav anchor 思路）且 `pointer-events` 穿透，目录卡绝对定位于槽的右上角外侧，**仅视口 ≥1440px 显示**，无标题文章不渲染
 - 列表分页：`listPosts(offset, limit)` 返回 `{ posts, total }`（每页 `POSTS_PAGE_SIZE`）；`/blog` 首屏只 SSR 第一页，其余由客户端经 `/api/posts?offset=&limit=` 无限滚动拉取（哨兵组件 `InfiniteSentinel.svelte`，observer 的 root 取最近的滚动祖先）。项目页数据在 `src/lib/projects.ts`，同款哨兵做分批懒渲染
 - panel 在桌面/移动端都是**固定尺寸**（`+layout.svelte` 两个 @media 分支），列表超高时在 panel 内部滚动——无限滚动依赖这一点，改布局时不要改回内容撑高
 

@@ -5,11 +5,13 @@
 	import { page } from '$app/state';
 	import { fade } from 'svelte/transition';
 	import ProfileCard from '$lib/components/ProfileCard.svelte';
+	import TocCard from '$lib/components/TocCard.svelte';
 	import { applyThemeFromImage } from '$lib/theme';
 	import type { SectionId } from '$lib/profile';
+	import type { LayoutProps } from './$types';
 	import '../app.css';
 
-	let { children } = $props();
+	let { children, data }: LayoutProps = $props();
 
 	// 板块由 URL 推导：仅 / 是主页（居中卡片），其余路径（含 404 错误页）一律导航栏形态。
 	// 直接输入 URL 访问时也是同一份推导，所以天然支持直达。
@@ -73,6 +75,24 @@
 					{@render children()}
 				</div>
 			{/key}
+		</div>
+
+		<!-- 文章目录的定位槽：.stage > * 已让它与 panel 同格叠放，再复刻 panel 的
+		     尺寸与居中即与 panel 精确重叠，目录卡由此贴在 panel 右上角外侧。
+		     与 panel-body 同款 keyed fade，路由切换时过渡节奏一致 -->
+		<div class="toc-slot">
+			{#if data.postToc && data.postToc.length > 0}
+				{@const toc = data.postToc}
+				{#key page.url.pathname}
+					<div
+						class="toc-float"
+						in:fade={{ duration: 250, delay: 120 }}
+						out:fade={{ duration: 120 }}
+					>
+						<TocCard headings={toc} />
+					</div>
+				{/key}
+			{/if}
 		</div>
 	</div>
 </main>
@@ -160,6 +180,33 @@
 		box-shadow: none;
 		-webkit-backdrop-filter: none;
 		backdrop-filter: none;
+	}
+
+	/* 目录定位槽：复刻 panel 的桌面尺寸与居中（移动端分支不启用本槽，无需同步那边的尺寸）。
+	   pointer-events 穿透，避免叠在 panel 上时挡住滚动与点击 */
+	.toc-slot {
+		display: none;
+		position: relative;
+		width: min(920px, calc(100% - 32px));
+		height: min(1200px, calc(100dvh - 56px));
+		margin: auto;
+		pointer-events: none;
+	}
+
+	/* 贴在 panel 右上角外侧。170px 卡 + 20px 间距：视口 ≥1440px 时恰好放进 panel 右侧空隙
+	   （空隙 = (视口 - 132 侧栏 - 920 panel) / 2 = 194px） */
+	.toc-float {
+		position: absolute;
+		top: 0;
+		left: calc(100% + 20px);
+		width: 170px;
+		pointer-events: auto;
+	}
+
+	@media (min-width: 1440px) {
+		.toc-slot {
+			display: block;
+		}
 	}
 
 	/* 移动端：卡片改为底部横条（会自动追踪锚点动画过去），panel 铺满舞台。
