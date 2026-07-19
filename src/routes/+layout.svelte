@@ -138,7 +138,7 @@
 		background: color-mix(in srgb, var(--panel) 55%, transparent);
 		-webkit-backdrop-filter: blur(8px) saturate(1.2);
 		backdrop-filter: blur(8px) saturate(1.2);
-		box-shadow: 0 24px 60px rgba(0, 0, 0, 0.35);
+		box-shadow: 0 24px 60px var(--shadow-panel);
 		overscroll-behavior: contain;
 		transition:
 			background 0.3s ease,

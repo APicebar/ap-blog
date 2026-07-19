@@ -7,6 +7,15 @@
 	--muted: #8b93a7;
 	--accent: #7aa2f7;
 	--border: rgba(255, 255, 255, 0.08);
+	/* Markdown 正文/列表项文字色：比 --text 暗、比 --muted 亮 */
+	--text-body: #c3c9d6;
+	/* 容器投影：panel 用较浅一档，名片卡用更深一档 */
+	--shadow-panel: rgba(0, 0, 0, 0.35);
+	--shadow-card: rgba(0, 0, 0, 0.45);
+	/* 微弱白色叠层：主页链接卡底色 / 技术栈标签底色 / 导航项 hover 底色 */
+	--link-bg: rgba(255, 255, 255, 0.02);
+	--chip-bg: rgba(255, 255, 255, 0.05);
+	--hover-bg: rgba(255, 255, 255, 0.06);
 	font-family:
 		ui-sans-serif,
 		system-ui,

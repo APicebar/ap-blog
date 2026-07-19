@@ -163,7 +163,7 @@
 		-webkit-backdrop-filter: blur(22px) saturate(1.4);
 		backdrop-filter: blur(22px) saturate(1.4);
 		border: 1px solid var(--border);
-		box-shadow: 0 24px 60px rgba(0, 0, 0, 0.45);
+		box-shadow: 0 24px 60px var(--shadow-card);
 		transition: border-radius 0.2s ease;
 	}
 
@@ -231,7 +231,7 @@
 		padding: 10px 14px;
 		border-radius: 14px;
 		border: 1px solid var(--border);
-		background: rgba(255, 255, 255, 0.02);
+		background: var(--link-bg);
 		text-decoration: none;
 		text-align: left;
 		transition:
@@ -286,7 +286,7 @@
 	}
 
 	.rail-item:hover {
-		background: rgba(255, 255, 255, 0.06);
+		background: var(--hover-bg);
 	}
 
 	.rail-item.active {

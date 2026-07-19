@@ -75,7 +75,7 @@ bun run test           # 即 test:e2e：playwright install chromium && playwrigh
 - 代码注释、UI 文案、文档主要使用**中文**，新代码请保持一致
 - 内部链接用 `$app/paths` 的 `resolve()`（eslint 规则 `svelte/no-navigation-without-resolve` 强制）；外部链接除外
 - 路由切换的过渡动效依赖 layout 中的常驻锚点与 `{#key page.url.pathname}` 结构，改动 `+layout.svelte` / `ProfileCard.svelte` 时注意保留这一机制
-- CSS 走暗色主题变量（`--accent`、`--panel`、`--panel-2`、`--muted`、`--border`），新样式复用这些变量和 `color-mix` 的既有写法
+- CSS 走暗色主题变量（`--accent`、`--panel`、`--panel-2`、`--muted`、`--border`、`--text-body`、`--shadow-panel`、`--shadow-card`、`--link-bg`、`--chip-bg`、`--hover-bg`，全部定义在 `src/app.css` 的 `:root`），新样式复用这些变量和 `color-mix` 的既有写法，不要写裸颜色字面量
 
 ## 测试
 

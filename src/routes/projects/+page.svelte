@@ -106,7 +106,7 @@
 		padding: 2px 8px;
 		border-radius: 999px;
 		font-size: 12px;
-		background: rgba(255, 255, 255, 0.05);
+		background: var(--chip-bg);
 		color: var(--muted);
 	}
 </style>

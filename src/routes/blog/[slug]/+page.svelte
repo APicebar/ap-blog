@@ -64,7 +64,7 @@
 
 	/* 正文由 {@html} 注入，scoped 样式作用不到，全部走 :global */
 	.content :global(p) {
-		color: #c3c9d6;
+		color: var(--text-body);
 		line-height: 1.9;
 		margin: 0 0 16px;
 	}
@@ -85,7 +85,7 @@
 	}
 
 	.content :global(li) {
-		color: #c3c9d6;
+		color: var(--text-body);
 		line-height: 1.9;
 	}
 
