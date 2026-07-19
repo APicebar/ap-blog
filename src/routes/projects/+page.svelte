@@ -1,6 +1,7 @@
 <script lang="ts">
 	import InfiniteSentinel from '$lib/components/InfiniteSentinel.svelte';
 	import { PROJECTS_CHUNK_SIZE, projects } from '$lib/projects';
+	import { pageTitle } from '$lib/site';
 
 	// 数据是本地常量，懒加载 = 分批渲染：哨兵滚入视野时每次多渲染一批，
 	// 避免长列表一次性挂载。本地切片不会失败，loading 恒为 false
@@ -14,7 +15,7 @@
 </script>
 
 <svelte:head>
-	<title>Projects - ovo? -</title>
+	<title>{pageTitle('Projects')}</title>
 </svelte:head>
 
 <header>

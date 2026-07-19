@@ -1,12 +1,13 @@
 <script lang="ts">
 	import { resolve } from '$app/paths';
+	import { pageTitle } from '$lib/site';
 	import type { PageProps } from './$types';
 
 	let { data }: PageProps = $props();
 </script>
 
 <svelte:head>
-	<title>{data.post.title} · Apice Bar</title>
+	<title>{pageTitle(data.post.title)}</title>
 </svelte:head>
 
 <a class="back" href={resolve('/blog')}>← 返回博客</a>

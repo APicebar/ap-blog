@@ -2,6 +2,7 @@
 	import { resolve } from '$app/paths';
 	import InfiniteSentinel from '$lib/components/InfiniteSentinel.svelte';
 	import { POSTS_PAGE_SIZE, type PostMeta, type PostsPage } from '$lib/posts';
+	import { pageTitle } from '$lib/site';
 	import type { PageProps } from './$types';
 
 	let { data }: PageProps = $props();
@@ -32,7 +33,7 @@
 </script>
 
 <svelte:head>
-	<title>Blog - ovo? -</title>
+	<title>{pageTitle('Blog')}</title>
 </svelte:head>
 
 <header>
