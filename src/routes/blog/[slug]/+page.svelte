@@ -83,6 +83,7 @@
 		padding: 1px 6px;
 		border-radius: 6px;
 		background: color-mix(in srgb, var(--accent) 12%, transparent);
+		font-family: var(--font-mono);
 		font-size: 0.9em;
 	}
 
@@ -93,11 +94,14 @@
 		border: 1px solid var(--border);
 		background: color-mix(in srgb, var(--panel-2) 78%, transparent);
 		overflow-x: auto;
+		/* 浏览器默认 tab 宽度是 8，代码里按 4 列渲染 */
+		tab-size: 4;
 	}
 
 	.content :global(pre code) {
 		padding: 0;
 		background: none;
+		font-family: var(--font-mono);
 		font-size: 13px;
 	}
 

@@ -15,5 +15,5 @@ export const projects: Project[] = [
 		name: 'luogubot',
 		desc: '给搞 OI 的玩的 bot，在 QQ 内查询多个算竞网站的数据。已弃坑。',
 		tech: ['Python']
-	},
+	}
 ];

@@ -21,7 +21,7 @@
 - Svelte 5，**runes 模式被强制开启**（`svelte.config.js` 中对非 `node_modules` 文件强制 `runes: true`），写组件时用 `$props()`、`$state`、`$derived`、`$effect`，不要用旧的 `export let` / `$:` 语法
 - 适配器：`@sveltejs/adapter-node`（同样配置在 `svelte.config.js`），构建产物是独立 Node 服务（`node build` 启动）
 - **注意**：kit ≥2.62 下若给 `vite.config.ts` 的 `sveltekit()` 传内联配置，`svelte.config.js` 会被**整个忽略**（仅一行警告）。本项目约定 SvelteKit/Svelte 配置只写在 `svelte.config.js`，`vite.config.ts` 仅保留 Vite 层配置（如 `server.host`）
-- 唯一的运行时依赖是 `marked`（服务端把 Markdown 渲染成 HTML）
+- 运行时依赖只有 `marked` + `marked-shiki` + `shiki`（服务端把 Markdown 渲染成带语法高亮的 HTML，高亮主题为 tokyo-night）
 - 包管理器：**bun**（锁定文件为 `bun.lock`，`.npmrc` 设了 `engine-strict=true`）；本机无 npm，脚本一律用 `bun run` 调用
 - 站点语言为中文，`src/app.html` 固定 `lang="zh-CN"`；暂不做 i18n
 
@@ -64,6 +64,7 @@ bun run test           # 即 test:e2e：playwright install chromium && playwrigh
 - 目录可用环境变量 `CONTENT_DIR` 覆盖（`$env/dynamic/private`，运行时读取），缺省 `content/posts`（**相对进程 cwd**，部署时建议绝对路径）
 - 以 `.` 开头的文件被跳过（兼容 rsync 临时文件和编辑器 swp）；单篇解析失败只跳过并 `console.warn`，不影响列表
 - 文章 HTML 通过 `{@html}` 注入页面——这是刻意为之（站长自己的 Markdown、服务端渲染），已有 eslint-disable 注释说明
+- 代码高亮：`marked-shiki` + Shiki（tokyo-night 主题）在服务端完成，`posts.ts` 里做成模块级异步单例（首次请求时初始化）；未在 `langs` 白名单里的语言回退为 `text` 不高亮；代码字体用自托管的 Fira Code（`@fontsource/fira-code`，`app.css` 顶部引入，变量 `--font-mono`）
 - 列表分页：`listPosts(offset, limit)` 返回 `{ posts, total }`（每页 `POSTS_PAGE_SIZE`）；`/blog` 首屏只 SSR 第一页，其余由客户端经 `/api/posts?offset=&limit=` 无限滚动拉取（哨兵组件 `InfiniteSentinel.svelte`，observer 的 root 取最近的滚动祖先）。项目页数据在 `src/lib/projects.ts`，同款哨兵做分批懒渲染
 - panel 在桌面/移动端都是**固定尺寸**（`+layout.svelte` 两个 @media 分支），列表超高时在 panel 内部滚动——无限滚动依赖这一点，改布局时不要改回内容撑高
 
@@ -75,7 +76,7 @@ bun run test           # 即 test:e2e：playwright install chromium && playwrigh
 - 代码注释、UI 文案、文档主要使用**中文**，新代码请保持一致
 - 内部链接用 `$app/paths` 的 `resolve()`（eslint 规则 `svelte/no-navigation-without-resolve` 强制）；外部链接除外
 - 路由切换的过渡动效依赖 layout 中的常驻锚点与 `{#key page.url.pathname}` 结构，改动 `+layout.svelte` / `ProfileCard.svelte` 时注意保留这一机制
-- CSS 走暗色主题变量（`--accent`、`--panel`、`--panel-2`、`--muted`、`--border`、`--text-body`、`--shadow-panel`、`--shadow-card`、`--link-bg`、`--chip-bg`、`--hover-bg`，全部定义在 `src/app.css` 的 `:root`），新样式复用这些变量和 `color-mix` 的既有写法，不要写裸颜色字面量
+- CSS 走暗色主题变量（`--accent`、`--panel`、`--panel-2`、`--muted`、`--border`、`--text-body`、`--shadow-panel`、`--shadow-card`、`--link-bg`、`--chip-bg`、`--hover-bg`、`--font-mono`，全部定义在 `src/app.css` 的 `:root`），新样式复用这些变量和 `color-mix` 的既有写法，不要写裸颜色字面量
 - 跨页面共用的样式抽为 `src/app.css` 的全局类：`.page-header`（板块页头）、`.card-surface`（一级内容卡表面 + hover）、`.meta` / `.tag`（元信息行与标签，两处字号差异留在页面 scoped 样式中）；新增共用时注意 scoped 样式带 hash 类、特异性高于全局类
 
 ## 测试
@@ -92,6 +93,7 @@ bun run build
 CONTENT_DIR=/srv/blog/posts PORT=3000 node build
 ```
 
+- 构建产物**自包含**：`vite.config.ts` 设了 `ssr.noExternal: true`，全部依赖（含 shiki/marked）都打进 `build/`，服务器上不需要 node_modules——SSR 构建默认外置 dependencies，曾导致服务器靠 bun 全局缓存兜底解析、shiki 自引用 `shiki/wasm` 时报 Cannot find module
 - `CONTENT_DIR` 必须指向构建产物**之外**的持久目录（Docker 场景挂载卷），并使用绝对路径；重新部署应用不影响文章
 - 内容发布是单向推送：`rsync -av --delete content/posts/ server:/srv/blog/posts/`（本地目录是唯一事实源；rsync 先写临时文件再重命名，请求不会读到写了一半的文件；`--delete` 同步下线已删文章）
 

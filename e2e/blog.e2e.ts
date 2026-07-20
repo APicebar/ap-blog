@@ -12,6 +12,8 @@ test('文章页渲染 Markdown 正文', async ({ page }) => {
 	await page.getByRole('heading', { name: '我的博客其实是一堆 Markdown' }).click();
 	await expect(page).toHaveURL('/blog/blog-is-just-markdown');
 	await expect(page.locator('.content pre code')).toBeVisible();
+	// Shiki 高亮生效的标志：服务端输出的 pre 带 shiki class
+	await expect(page.locator('.content pre.shiki')).toBeVisible();
 });
 
 test('不存在或非法的 slug 返回 404', async ({ page }) => {

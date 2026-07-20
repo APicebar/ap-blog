@@ -1,7 +1,9 @@
 import { readdir, readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { env } from '$env/dynamic/private';
-import { marked } from 'marked';
+import { Marked } from 'marked';
+import markedShiki from 'marked-shiki';
+import { createHighlighter } from 'shiki';
 import { POSTS_PAGE_SIZE, type PostMeta, type PostsPage } from '$lib/posts';
 
 export interface Post extends PostMeta {
@@ -15,6 +17,44 @@ const contentDir = () => env.CONTENT_DIR || 'content/posts';
 
 // slug 即文件名，白名单防路径穿越；超出此字符集的文件名不会被路由到
 const SLUG_PATTERN = /^[A-Za-z0-9_-]+$/;
+
+// Shiki 初始化是异步的：模块级单例，首次渲染文章时完成，后续请求复用同一实例。
+// tokyo-night 与站点暗色主题、--accent 蓝色一致；langs 按需白名单，控制内存与启动开销
+const markedPromise = createHighlighter({
+	themes: ['tokyo-night'],
+	langs: [
+		'ts',
+		'js',
+		'svelte',
+		'css',
+		'html',
+		'json',
+		'bash',
+		'yaml',
+		'md',
+		'python',
+		'rust',
+		'go',
+		'diff',
+		'csharp',
+		'cpp',
+		'asm',
+		'c'
+	]
+}).then((highlighter) =>
+	new Marked().use(
+		markedShiki({
+			highlight(code, lang) {
+				// 未加载的语言回退为 text（无高亮但仍带主题底色），避免 codeToHtml 抛错
+				const loaded = highlighter.getLoadedLanguages() as string[];
+				return highlighter.codeToHtml(code, {
+					lang: loaded.includes(lang) ? lang : 'text',
+					theme: 'tokyo-night'
+				});
+			}
+		})
+	)
+);
 
 // 极简 frontmatter：仅支持 `key: value` 与 `tags: [a, b]`，需要嵌套结构时再换 yaml 解析器
 function parseFrontmatter(raw: string): { data: Record<string, string>; body: string } {
@@ -94,7 +134,9 @@ export async function getPost(slug: string): Promise<Post | null> {
 		const raw = await readFile(path.join(contentDir(), `${slug}.md`), 'utf-8');
 		const { meta, body, draft } = parsePost(slug, raw);
 		if (draft) return null;
-		return { ...meta, html: marked.parse(body, { async: false }) };
+		const marked = await markedPromise;
+		// marked-shiki 会把扩展标记为 async，必须走异步 parse（highlight 本身是同步的）
+		return { ...meta, html: await marked.parse(body, { async: true }) };
 	} catch {
 		return null;
 	}

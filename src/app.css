@@ -1,3 +1,7 @@
+/* Fira Code 自托管（fontsource 打包进产物，无外部 CDN 依赖），供代码块/行内 code 使用 */
+@import '@fontsource/fira-code/400.css';
+@import '@fontsource/fira-code/500.css';
+
 :root {
 	color-scheme: dark;
 	--bg: #0b0e14;
@@ -16,6 +20,8 @@
 	--link-bg: rgba(255, 255, 255, 0.02);
 	--chip-bg: rgba(255, 255, 255, 0.05);
 	--hover-bg: rgba(255, 255, 255, 0.06);
+	/* 代码块/行内 code 的等宽字体（Fira Code 见顶部 @import；连字默认开启） */
+	--font-mono: 'Fira Code', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
 	font-family:
 		ui-sans-serif,
 		system-ui,
