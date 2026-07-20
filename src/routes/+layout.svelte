@@ -1,5 +1,4 @@
 <script lang="ts">
-	import favicon from '$lib/assets/favicon.svg';
 	import bg from '$lib/assets/bg.png';
 	import { onMount } from 'svelte';
 	import { page } from '$app/state';
@@ -43,10 +42,6 @@
 		void applyThemeFromImage(bg).catch(() => {});
 	});
 </script>
-
-<svelte:head>
-	<link rel="icon" href={favicon} />
-</svelte:head>
 
 <div class="bg-layer" style:background-image="url({bg})"></div>
 <div class="scrim"></div>
