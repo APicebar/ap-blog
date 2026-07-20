@@ -27,3 +27,6 @@ test-results
 # AI & IDE related
 .claude
 .vscode
+
+# Example file
+content
