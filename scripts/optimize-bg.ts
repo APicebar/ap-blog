@@ -1,28 +1,23 @@
-// 从图片提取主题色并写入 CSS 变量（--accent）。
-// 流程：canvas 缩采样 → median-cut 颜色量化 → 按「人口 × 饱和度² × 亮度权重」打分选主色
-// → 归一化成暗色 UI 上可用的强调色。提取失败时静默保留 :root 里的默认 --accent。
+import sharp from 'sharp';
+import { writeFileSync, mkdirSync } from 'node:fs';
+import path from 'node:path';
+
+const SRC = path.resolve('src/lib/assets/bg.png');
+const OUT_WEBP = path.resolve('src/lib/assets/bg.webp');
+const OUT_OG = path.resolve('static/og-image.png');
+const OUT_ACCENT = path.resolve('src/lib/generated/accent.ts');
+
+const SAMPLE_SIZE = 80;
+const MAX_BOXES = 12;
 
 interface RGB {
 	r: number;
 	g: number;
 	b: number;
 }
-
 type Channel = keyof RGB;
 
-const SAMPLE_SIZE = 80; // 缩采样边长，80px 足够代表色彩分布
-const MAX_BOXES = 12; // 量化盒子上限
-
-function loadImage(url: string): Promise<HTMLImageElement> {
-	return new Promise((resolve, reject) => {
-		const img = new Image();
-		img.onload = () => resolve(img);
-		img.onerror = () => reject(new Error(`图片加载失败: ${url}`));
-		img.src = url;
-	});
-}
-
-function rgbToHsl({ r, g, b }: RGB): [h: number, s: number, l: number] {
+function rgbToHsl({ r, g, b }: RGB): [number, number, number] {
 	r /= 255;
 	g /= 255;
 	b /= 255;
@@ -62,7 +57,6 @@ function widestChannel(box: RGB[]): Channel {
 	return best;
 }
 
-/** 经典的 median-cut：反复把「通道范围最大」的盒子沿中位数切成两半 */
 function medianCut(pixels: RGB[], maxBoxes: number): RGB[][] {
 	const boxes: RGB[][] = [pixels];
 	while (boxes.length < maxBoxes) {
@@ -79,7 +73,7 @@ function medianCut(pixels: RGB[], maxBoxes: number): RGB[][] {
 				ch = c;
 			}
 		});
-		if (idx < 0) break; // 所有盒子都只剩单色，提前结束
+		if (idx < 0) break;
 		const [box] = boxes.splice(idx, 1);
 		box.sort((a, b) => a[ch] - b[ch]);
 		const mid = box.length >> 1;
@@ -101,25 +95,13 @@ function average(box: RGB[]): RGB {
 	return { r: Math.round(r / n), g: Math.round(g / n), b: Math.round(b / n) };
 }
 
-export async function applyThemeFromImage(url: string): Promise<void> {
-	const img = await loadImage(url);
-
-	const canvas = document.createElement('canvas');
-	canvas.width = SAMPLE_SIZE;
-	canvas.height = SAMPLE_SIZE;
-	const ctx = canvas.getContext('2d', { willReadFrequently: true });
-	if (!ctx) return;
-	ctx.drawImage(img, 0, 0, SAMPLE_SIZE, SAMPLE_SIZE);
-	const { data } = ctx.getImageData(0, 0, SAMPLE_SIZE, SAMPLE_SIZE);
-
+function extractAccent(data: Buffer, width: number, height: number): string {
 	const pixels: RGB[] = [];
-	for (let i = 0; i < data.length; i += 4) {
-		if (data[i + 3] < 128) continue; // 跳过基本透明的像素
-		pixels.push({ r: data[i], g: data[i + 1], b: data[i + 2] });
+	for (let i = 0; i < width * height; i++) {
+		const offset = i * 3;
+		pixels.push({ r: data[offset], g: data[offset + 1], b: data[offset + 2] });
 	}
-	if (pixels.length === 0) return;
 
-	// 饱和度取平方：让灰色、棕色很难胜出，挑到的是图片里「最像主题色」的颜色
 	let best: { h: number; s: number; l: number } | null = null;
 	let bestScore = 0;
 	for (const box of medianCut(pixels, MAX_BOXES)) {
@@ -130,14 +112,59 @@ export async function applyThemeFromImage(url: string): Promise<void> {
 			best = { h, s, l };
 		}
 	}
-	if (!best) return;
 
-	// 归一化：暗色 UI 上的强调色需要足够的饱和度和亮度才「跳」得出来
+	if (!best) return 'hsl(222 65% 65%)';
+
 	const s = Math.min(0.85, Math.max(0.45, best.s));
 	const l = Math.min(0.7, Math.max(0.6, best.l));
 	const h = Math.round(best.h);
-	document.documentElement.style.setProperty(
-		'--accent',
-		`hsl(${h} ${Math.round(s * 100)}% ${Math.round(l * 100)}%)`
-	);
+	return `hsl(${h} ${Math.round(s * 100)}% ${Math.round(l * 100)}%)`;
 }
+
+async function main() {
+	const img = sharp(SRC);
+
+	// 1. Generate optimized WebP for the blurred background
+	await img
+		.clone()
+		.resize(960, null, { withoutEnlargement: true })
+		.webp({ quality: 75 })
+		.toFile(OUT_WEBP);
+
+	const webpStat = await import('node:fs').then((fs) => fs.statSync(OUT_WEBP));
+	console.log(`bg.webp: ${(webpStat.size / 1024).toFixed(0)} KB (from ${SRC})`);
+
+	// 2. Extract accent color from a small sample
+	const { data, info } = await img
+		.clone()
+		.resize(SAMPLE_SIZE, SAMPLE_SIZE, { fit: 'cover' })
+		.removeAlpha()
+		.raw()
+		.toBuffer({ resolveWithObject: true });
+
+	const accent = extractAccent(data, info.width, info.height);
+	console.log(`accent: ${accent}`);
+
+	mkdirSync(path.dirname(OUT_ACCENT), { recursive: true });
+	writeFileSync(OUT_ACCENT, `export const ACCENT = '${accent}';\n`);
+
+	// 3. Generate OG image (1200x630) from background with dark overlay
+	const ogOverlay = Buffer.from(
+		`<svg width="1200" height="630">
+			<rect width="1200" height="630" fill="rgba(11,14,20,0.55)"/>
+		</svg>`
+	);
+	await sharp(SRC)
+		.resize(1200, 630, { fit: 'cover' })
+		.composite([{ input: ogOverlay, blend: 'over' }])
+		.png({ quality: 80 })
+		.toFile(OUT_OG);
+
+	const ogStat = await import('node:fs').then((fs) => fs.statSync(OUT_OG));
+	console.log(`og-image.png: ${(ogStat.size / 1024).toFixed(0)} KB`);
+}
+
+main().catch((err) => {
+	console.error(err);
+	process.exit(1);
+});

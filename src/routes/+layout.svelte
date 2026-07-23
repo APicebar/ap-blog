@@ -1,10 +1,8 @@
 <script lang="ts">
-	import bg from '$lib/assets/bg.png';
-	import { onMount } from 'svelte';
+	import bg from '$lib/assets/bg.webp';
 	import { page } from '$app/state';
 	import { fade } from 'svelte/transition';
 	import ProfileCard from '$lib/components/ProfileCard.svelte';
-	import { applyThemeFromImage } from '$lib/theme';
 	import type { SectionId } from '$lib/profile';
 	import '../app.css';
 
@@ -35,12 +33,6 @@
 		panelEl?.scrollTo({ top: 0 });
 	});
 
-	// 运行时从背景图提取主题色写入 --accent；bg 是 Vite 处理的资源 URL，
-	// 替换 assets 中的图片后（dev 下 HMR 触发整页刷新）会自动重新提取。
-	// 提取失败时保留 :root 中的默认 --accent。
-	onMount(() => {
-		void applyThemeFromImage(bg).catch(() => {});
-	});
 </script>
 
 <div class="bg-layer" style:background-image="url({bg})"></div>
