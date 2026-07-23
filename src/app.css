@@ -1,6 +1,6 @@
 /* Fira Code 自托管（fontsource 打包进产物，无外部 CDN 依赖），供代码块/行内 code 使用 */
-@import '@fontsource/fira-code/400.css';
-@import '@fontsource/fira-code/500.css';
+@import '@fontsource/fira-code/latin-400.css';
+@import '@fontsource/fira-code/latin-500.css';
 
 :root {
 	color-scheme: dark;
@@ -9,7 +9,7 @@
 	--panel-2: #1d2432;
 	--text: #e6e9f0;
 	--muted: #8b93a7;
-	--accent: #7aa2f7;
+	--accent: hsl(209 45% 60%);
 	--border: rgba(255, 255, 255, 0.08);
 	/* Markdown 正文/列表项文字色：比 --text 暗、比 --muted 亮 */
 	--text-body: #c3c9d6;
