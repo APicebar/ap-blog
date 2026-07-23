@@ -28,5 +28,10 @@ test-results
 .claude
 .vscode
 
+# Build-generated assets
+src/lib/assets/bg.webp
+src/lib/generated
+static/og-image.png
+
 # Example file
 content
