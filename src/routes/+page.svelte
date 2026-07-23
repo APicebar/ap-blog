@@ -8,4 +8,5 @@
 	<meta property="og:title" content={pageTitle()} />
 	<meta property="og:description" content={SITE_DESCRIPTION} />
 	<meta property="og:type" content="website" />
+	<meta property="og:image" content="https://apice.bar/og-image.png" />
 </svelte:head>

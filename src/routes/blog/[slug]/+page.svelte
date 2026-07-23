@@ -12,6 +12,7 @@
 	<meta property="og:title" content={pageTitle(data.post.title)} />
 	<meta property="og:description" content={data.post.excerpt} />
 	<meta property="og:type" content="article" />
+	<meta property="og:image" content="https://apice.bar/og-image.png" />
 </svelte:head>
 
 <a class="back" href={resolve('/blog')}>← 返回博客</a>
