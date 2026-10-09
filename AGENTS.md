@@ -28,7 +28,7 @@
 ## 目录结构
 
 ```
-content/posts/          博客文章（Markdown，运行时读取，不在构建产物内）
+content/posts/          博客文章（每篇一个文件夹：index.md + 图片等资源，运行时读取，不在构建产物内）
 src/lib/server/posts.ts 博客核心：扫描目录、解析 frontmatter、渲染 Markdown（仅服务端）
 src/lib/posts.ts        客户端/服务端共享的文章类型（PostMeta/PostsPage）与分页常量
 src/lib/profile.ts      名片卡数据（头像、名字、链接）
@@ -36,7 +36,7 @@ src/lib/projects.ts     项目展示数据与分批渲染常量
 src/lib/theme.ts        从背景图提取主题色的客户端逻辑
 src/lib/components/     ProfileCard.svelte（常驻名片卡/导航栏）、InfiniteSentinel.svelte（无限滚动哨兵）
 src/lib/assets/         背景图、favicon
-src/routes/             SvelteKit 路由：+layout.svelte、+page.svelte、blog/、projects/、api/posts/（分页 JSON）
+src/routes/             SvelteKit 路由：+layout.svelte、+page.svelte、blog/（含 [slug]/assets/ 资源端点）、projects/、api/posts/（分页 JSON）
 e2e/blog.e2e.ts         Playwright 端到端测试
 static/                 静态文件（robots.txt）
 svelte.config.js        adapter-node + 强制 runes（SvelteKit/Svelte 配置的唯一位置）
@@ -57,12 +57,14 @@ bun run test           # 即 test:e2e：playwright install chromium && playwrigh
 
 ## 博客内容系统（改这块前必读）
 
-文章是 `content/posts/` 下的 Markdown 文件，**服务器每次请求时用 `node:fs` 扫描目录**（`src/lib/server/posts.ts` 的 `listPosts`/`getPost`），发文/改文/删文不需要重新构建或重启。约定：
+文章是 `content/posts/` 下的文件夹，**每篇文章一个文件夹**（文件夹名即 slug），正文固定为 `index.md`，图片等资源放同目录。**服务器每次请求时用 `node:fs` 扫描目录**（`src/lib/server/posts.ts` 的 `listPosts`/`getPost`），发文/改文/删文不需要重新构建或重启。约定：
 
-- 文件名即 URL slug，只允许 `A-Za-z0-9_-`（`SLUG_PATTERN` 白名单，防路径穿越；`e2e` 测试覆盖了 `..%2F` 穿越返回 404）
+- 文件夹名即 URL slug，只允许 `A-Za-z0-9_-`（`SLUG_PATTERN` 白名单，防路径穿越；`e2e` 测试覆盖了 `..%2F` 穿越返回 404）
+- Markdown 中直接写**相对路径**引用同目录图片（如 `![一张图片](image_1.jpg)`）：渲染时 `walkTokens` 把相对 `src` 改写到 `/blog/<slug>/assets/...`，由 `src/routes/blog/[slug]/assets/[...path]/+server.ts` 从文章文件夹读文件返回；绝对 URL、站内绝对路径与锚点不改写
+- assets 端点只允许扩展名白名单（常见图片/音视频/pdf，顺带挡住了 `index.md` 等源文件），逐段拦截 `.` 开头路径 + `resolve`/`startsWith` 边界校验防穿越；**草稿文章的资源同样 404**
 - frontmatter 是**自实现的极简解析器**，只支持 `key: value` 和 `tags: [a, b]`；字段：`title`、`date`、`excerpt`、`tags`、`draft: true`（草稿不展示）。需要嵌套结构时才考虑换 yaml 解析器
 - 目录可用环境变量 `CONTENT_DIR` 覆盖（`$env/dynamic/private`，运行时读取），缺省 `content/posts`（**相对进程 cwd**，部署时建议绝对路径）
-- 以 `.` 开头的文件被跳过（兼容 rsync 临时文件和编辑器 swp）；单篇解析失败只跳过并 `console.warn`，不影响列表
+- 以 `.` 开头的文件夹被跳过（兼容 rsync 临时文件和编辑器 swp）；缺 `index.md` 或单篇解析失败只跳过并 `console.warn`，不影响列表
 - 文章 HTML 通过 `{@html}` 注入页面——这是刻意为之（站长自己的 Markdown、服务端渲染），已有 eslint-disable 注释说明
 - 代码高亮：`marked-shiki` + Shiki（tokyo-night 主题）在服务端完成，`posts.ts` 里做成模块级异步单例（首次请求时初始化）；未在 `langs` 白名单里的语言回退为 `text` 不高亮；代码字体用自托管的 Fira Code（`@fontsource/fira-code`，`app.css` 顶部引入，变量 `--font-mono`）
 - 列表分页：`listPosts(offset, limit)` 返回 `{ posts, total }`（每页 `POSTS_PAGE_SIZE`）；`/blog` 首屏只 SSR 第一页，其余由客户端经 `/api/posts?offset=&limit=` 无限滚动拉取（哨兵组件 `InfiniteSentinel.svelte`，observer 的 root 取最近的滚动祖先）。项目页数据在 `src/lib/projects.ts`，同款哨兵做分批懒渲染
@@ -83,7 +85,7 @@ bun run test           # 即 test:e2e：playwright install chromium && playwrigh
 
 - 只有 **Playwright 端到端测试**（`e2e/*.e2e.ts`），没有单元测试（刻意取舍）
 - `playwright.config.ts` 的 webServer 会先 `bun run build` 再 `bun run preview`，测试跑在**生产构建**上（端口 4173）；只安装/使用 chromium（本机装全量浏览器会被 firefox/webkit 系统依赖卡住）
-- 现有用例断言具体的中文文章标题（来自 `content/posts/` 下的三篇示例文章），增删示例文章会导致 e2e 失败，需同步更新 `e2e/blog.e2e.ts`
+- 现有用例断言具体的中文文章标题（来自 `content/posts/` 下的示例文章），增删示例文章会导致 e2e 失败，需同步更新 `e2e/blog.e2e.ts`；图片相关用例的夹具文章由测试临时创建、结束自动清理，不要往仓库里加
 - 改完代码至少跑 `bun run check` + `bun run lint`；涉及博客逻辑或路由的改动再跑 `bun run test`
 
 ## 部署
@@ -99,6 +101,6 @@ CONTENT_DIR=/srv/blog/posts PORT=3000 node build
 
 ## 安全注意事项
 
-- slug 白名单 + `path.join` 是对路径穿越的防护，改动 `posts.ts` 时不要削弱这两层
+- slug 白名单 + `path.join`/`path.resolve` 边界校验是对路径穿越的防护，改动 `posts.ts` 与 assets 端点时不要削弱这两层；assets 端点的扩展名白名单还兼防文章源文件（`index.md`）泄露
 - `CONTENT_DIR` 属于私密环境变量，只能通过 `$env/dynamic/private` 在服务端使用，不要导入到客户端代码（`$lib/server/` 下的模块本就禁止被客户端引用）
 - 仓库无密钥管理需求；`.env` 类文件不会被提交
